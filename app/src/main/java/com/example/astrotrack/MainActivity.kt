@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             AstroTrackTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Hello teammates..!!",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
