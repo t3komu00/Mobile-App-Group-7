@@ -1,61 +1,82 @@
 package com.example.astrotrack
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.navigation.compose.rememberNavController
+import androidx.work.*
+import androidx.work.WorkManager
+import com.example.astrotrack.navigation.AppNavGraph
+import com.example.astrotrack.ui.theme.AstroTrackTheme
+import com.example.astrotrack.viewmodel.ApodViewModel
+import com.example.astrotrack.worker.ReminderWorker
+import com.google.firebase.FirebaseApp
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
-    private val TAG = "FirebaseTest"
 
+    private val viewModel: ApodViewModel by viewModels()
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val email = "test@example.com"
-        val password = "password123"
+        FirebaseApp.initializeApp(this)
 
-        val auth = FirebaseAuth.getInstance()
-
-        // First try to create user
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { authResult ->
-                Log.d(TAG, "✅ Email sign-up successful: ${authResult.user?.uid}")
-
-                // Write to Firestore
-                val db = FirebaseFirestore.getInstance()
-                val data = hashMapOf(
-                    "name" to "AstroTrack User",
-                    "status" to "Signed up and connected to Firestore",
-                    "timestamp" to System.currentTimeMillis()
+        //  Ask for POST_NOTIFICATIONS permission (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    100
                 )
-
-                db.collection("users").add(data)
-                    .addOnSuccessListener {
-                        Log.d(TAG, "✅ Firestore write successful: ${it.id}")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e(TAG, "❌ Firestore write failed", e)
-                    }
             }
-            .addOnFailureListener { signUpError ->
-                Log.e(TAG, "❌ Email sign-up failed", signUpError)
-
-                // If already registered, try sign-in instead
-                auth.signInWithEmailAndPassword(email, password)
-                    .addOnSuccessListener {
-                        Log.d(TAG, "✅ Signed in existing user: ${it.user?.uid}")
-                    }
-                    .addOnFailureListener { signInError ->
-                        Log.e(TAG, "❌ Sign-in also failed", signInError)
-                    }
-            }
-
-        // UI content
-        setContent {
-            Text("Signing in with Email/Password...")
         }
+
+        //  Schedule testable local notification
+        scheduleTestReminder(hour = 8, minute = 0)
+
+        setContent {
+            AstroTrackTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    val navController = rememberNavController()
+                    AppNavGraph(navController = navController, viewModel = viewModel)
+                }
+            }
+        }
+    }
+
+    private fun scheduleTestReminder(hour: Int, minute: Int) {
+        val current = Calendar.getInstance()
+        val target = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            if (before(current)) add(Calendar.DAY_OF_MONTH, 1)
+        }
+
+        val delayMillis = target.timeInMillis - current.timeInMillis
+
+        val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
+            .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(this).enqueue(workRequest)
     }
 }

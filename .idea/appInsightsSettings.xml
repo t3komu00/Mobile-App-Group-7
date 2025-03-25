@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.astrotrack" />
+                  <option name="mobileSdkAppId" value="1:163607543046:android:b3fc90417108b4c320f287" />
+                  <option name="projectId" value="astrotrack-68306" />
+                  <option name="projectNumber" value="163607543046" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
