@@ -24,7 +24,7 @@ import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreen(viewModel: ApodViewModel, navController: NavController) {
+fun MainScreen(viewModel: ApodViewModel, navController: NavController,modifier: Modifier=Modifier) {
     var startDate by remember { mutableStateOf(viewModel.savedStartDate) }
     var endDate by remember { mutableStateOf(viewModel.savedEndDate) }
     var showSearch by remember { mutableStateOf(false) }
@@ -45,7 +45,7 @@ fun MainScreen(viewModel: ApodViewModel, navController: NavController) {
         }
     else apodList
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             Text("Explore Space", style = MaterialTheme.typography.headlineSmall)
             IconButton(onClick = { showSearch = !showSearch }) {

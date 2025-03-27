@@ -16,7 +16,7 @@ import com.example.astrotrack.ui.components.ApodListItem
 import com.example.astrotrack.viewmodel.ApodViewModel
 
 @Composable
-fun FavoritesScreen(viewModel: ApodViewModel, navController: NavController) {
+fun FavoritesScreen(viewModel: ApodViewModel, navController: NavController, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val favorites by viewModel.favoriteList.collectAsState()
 
@@ -32,7 +32,7 @@ fun FavoritesScreen(viewModel: ApodViewModel, navController: NavController) {
         }
     else favorites
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             Text("My Favorites", style = MaterialTheme.typography.headlineSmall)
             IconButton(onClick = { showSearch = !showSearch }) {
