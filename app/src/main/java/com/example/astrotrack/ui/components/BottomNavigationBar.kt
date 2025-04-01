@@ -8,12 +8,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material.icons.filled.Person
+
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         NavBarItem("main", "Home", Icons.Default.Home),
-        NavBarItem("favorites", "Favorites", Icons.Default.Favorite)
+        NavBarItem("favorites", "Favorites", Icons.Default.Favorite) ,
+        NavBarItem("profile", "Profile", Icons.Default.Person)
     )
 
     NavigationBar {

@@ -51,6 +51,15 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
             }
         }
 
+        composable("profile") {
+            Scaffold(
+                bottomBar = { BottomNavigationBar(navController) }
+            ) { padding ->
+                ProfileScreen(navController = navController)
+            }
+        }
+
+
         // 🔍 Detail screen (no bottom nav)
         composable("detail/selected") {
             selectedItem?.let {
