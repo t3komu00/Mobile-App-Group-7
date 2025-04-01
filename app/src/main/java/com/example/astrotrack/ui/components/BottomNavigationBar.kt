@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Person
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         NavBarItem("main", "Home", Icons.Default.Home),
-        NavBarItem("favorites", "Favorites", Icons.Default.Favorite) ,
         NavBarItem("profile", "Profile", Icons.Default.Person)
     )
 

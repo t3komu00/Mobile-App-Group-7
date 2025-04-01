@@ -1,43 +1,133 @@
 package com.example.astrotrack.ui
 
-
-
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
+    val auth = FirebaseAuth.getInstance()
+    val context = LocalContext.current
+
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+
+    // Fetch user's name from Firestore
+    LaunchedEffect(Unit) {
+        val userId = auth.currentUser?.uid
+        userId?.let {
+            FirebaseFirestore.getInstance().collection("users").document(it)
+                .get()
+                .addOnSuccessListener { document ->
+                    firstName = document.getString("firstName") ?: ""
+                    lastName = document.getString("lastName") ?: ""
+                }
+        }
+    }
+
+    val initials = "${firstName.firstOrNull() ?: ""}${lastName.firstOrNull() ?: ""}".uppercase()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Profile picture with initials
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(100.dp)
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
+        ) {
+            Text(
+                text = initials,
+                fontSize = 32.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Full name text
         Text(
-            text = "Welcome to Your Profile!",
-            style = MaterialTheme.typography.headlineSmall
+            text = "$firstName $lastName",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = {
-            navController.navigate("editProfile")
-        }) {
-            Text("Edit Profile")
+        // Edit Profile Button
+        Button(
+            onClick = {
+                navController.navigate("editProfile")
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Edit Profile", fontSize = 16.sp, fontWeight = FontWeight.Medium)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            // TODO: Add logout functionality
-        }) {
-            Text("Logout")
+        // My Favorites Button
+        Button(
+            onClick = {
+                navController.navigate("favorites")
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Icon(Icons.Default.Favorite, contentDescription = "Favorites")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("My Favorites", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Logout Button
+        Button(
+            onClick = {
+                auth.signOut()
+                Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Logout", fontSize = 16.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
