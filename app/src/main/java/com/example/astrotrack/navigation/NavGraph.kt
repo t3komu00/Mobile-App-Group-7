@@ -12,6 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.astrotrack.ui.*
 import com.example.astrotrack.ui.components.BottomNavigationBar
+import com.example.astrotrack.ui.EditProfileScreen
+
 import com.example.astrotrack.viewmodel.ApodViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -58,6 +60,11 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
                 ProfileScreen(navController = navController)
             }
         }
+
+        composable("editProfile") {
+            EditProfileScreen(navController)
+        }
+
 
 
         // 🔍 Detail screen (no bottom nav)
