@@ -22,7 +22,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun ProfileScreen(navController: NavHostController) {
+fun ProfileScreen(
+    navController: NavHostController,
+    modifier: Modifier = Modifier //  Added modifier parameter
+) {
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
 
@@ -45,7 +48,7 @@ fun ProfileScreen(navController: NavHostController) {
     val initials = "${firstName.firstOrNull() ?: ""}${lastName.firstOrNull() ?: ""}".uppercase()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
@@ -68,7 +71,6 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Full name text
         Text(
             text = "$firstName $lastName",
             style = MaterialTheme.typography.titleMedium,
@@ -77,7 +79,6 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Edit Profile Button
         Button(
             onClick = {
                 navController.navigate("editProfile")
@@ -94,7 +95,6 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // My Favorites Button
         Button(
             onClick = {
                 navController.navigate("favorites")
@@ -111,7 +111,6 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Logout Button
         Button(
             onClick = {
                 auth.signOut()

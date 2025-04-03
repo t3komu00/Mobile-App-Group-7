@@ -80,7 +80,6 @@ class ApodViewModel : ViewModel() {
         }
     }
 
-
     fun refreshFavorites() {
         favoritesRepo.getFavorites {
             _favoriteList.value = it

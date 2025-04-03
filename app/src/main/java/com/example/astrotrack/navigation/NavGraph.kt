@@ -12,8 +12,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.astrotrack.ui.*
 import com.example.astrotrack.ui.components.BottomNavigationBar
-import com.example.astrotrack.ui.EditProfileScreen
-
 import com.example.astrotrack.viewmodel.ApodViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -23,41 +21,46 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
 
     NavHost(
         navController = navController,
-        startDestination = "splash" // 🔁 Start with splash
+        startDestination = "splash"
     ) {
-        // 🚀 Fullscreen screens (no bottom nav)
         composable("splash") {
             SplashScreen(navController)
         }
+
         composable("login") {
-            LoginScreen(navController)
-        }
-        composable("signup") {
-            SignUpScreen(navController)
+            LoginScreen(navController = navController, viewModel = viewModel)
         }
 
-        // 🌌 Screens with bottom nav wrapped in Scaffold
+        composable("signup") {
+            SignUpScreen(navController = navController)
+        }
+
         composable("main") {
-            Scaffold(
-                bottomBar = { BottomNavigationBar(navController) }
-            ) { padding ->
-                MainScreen(viewModel, navController, modifier = Modifier.padding(padding))
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { padding ->
+                MainScreen(
+                    viewModel = viewModel,
+                    navController = navController,
+                    modifier = Modifier.padding(padding)
+                )
             }
         }
 
         composable("favorites") {
-            Scaffold(
-                bottomBar = { BottomNavigationBar(navController) }
-            ) { padding ->
-                FavoritesScreen(viewModel, navController, modifier = Modifier.padding(padding))
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { padding ->
+                FavoritesScreen(
+                    viewModel = viewModel,
+                    navController = navController,
+                    modifier = Modifier.padding(padding)
+                )
             }
         }
 
         composable("profile") {
-            Scaffold(
-                bottomBar = { BottomNavigationBar(navController) }
-            ) { padding ->
-                ProfileScreen(navController = navController)
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { padding ->
+                ProfileScreen(
+                    navController = navController,
+                    modifier = Modifier.padding(padding)
+                )
             }
         }
 
@@ -65,9 +68,6 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
             EditProfileScreen(navController)
         }
 
-
-
-        // 🔍 Detail screen (no bottom nav)
         composable("detail/selected") {
             selectedItem?.let {
                 DetailScreen(it)

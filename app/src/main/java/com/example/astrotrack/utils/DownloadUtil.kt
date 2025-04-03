@@ -20,11 +20,11 @@ fun downloadImage(context: Context, url: String, title: String) {
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         downloadManager.enqueue(request)
 
-        // ✅ Show success message
-        Toast.makeText(context, "✅ Successfully downloaded to your gallery", Toast.LENGTH_SHORT).show()
+        //  Show success message
+        Toast.makeText(context, "Successfully downloaded to your gallery", Toast.LENGTH_SHORT).show()
 
     } catch (e: Exception) {
         e.printStackTrace()
-        Toast.makeText(context, "❌ Download failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, " Download failed: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 }
