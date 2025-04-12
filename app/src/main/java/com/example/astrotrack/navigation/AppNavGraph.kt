@@ -3,7 +3,6 @@ package com.example.astrotrack.navigation
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -11,32 +10,26 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.astrotrack.ui.*
-import com.example.astrotrack.ui.components.BottomNavigationBar
+import com.example.astrotrack.ui.components.AppScaffold
 import com.example.astrotrack.viewmodel.ApodViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
+fun AppNavGraph(
+    navController: NavHostController,
+    viewModel: ApodViewModel,
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
+) {
     val selectedItem = viewModel.selectedItem.collectAsState().value
 
-    NavHost(
-        navController = navController,
-        startDestination = "splash"
-    ) {
-        composable("splash") {
-            SplashScreen(navController)
-        }
-
-        composable("login") {
-            LoginScreen(navController = navController, viewModel = viewModel)
-        }
-
-        composable("signup") {
-            SignUpScreen(navController = navController)
-        }
+    NavHost(navController = navController, startDestination = "splash") {
+        composable("splash") { SplashScreen(navController) }
+        composable("login") { LoginScreen(navController, viewModel) }
+        composable("signup") { SignUpScreen(navController) }
 
         composable("main") {
-            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { padding ->
+            AppScaffold(navController = navController) { padding ->
                 MainScreen(
                     viewModel = viewModel,
                     navController = navController,
@@ -46,7 +39,7 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
         }
 
         composable("favorites") {
-            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { padding ->
+            AppScaffold(navController = navController) { padding ->
                 FavoritesScreen(
                     viewModel = viewModel,
                     navController = navController,
@@ -56,7 +49,7 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
         }
 
         composable("profile") {
-            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { padding ->
+            AppScaffold(navController = navController) { padding ->
                 ProfileScreen(
                     navController = navController,
                     modifier = Modifier.padding(padding)
@@ -66,6 +59,17 @@ fun AppNavGraph(navController: NavHostController, viewModel: ApodViewModel) {
 
         composable("editProfile") {
             EditProfileScreen(navController)
+        }
+
+        composable("settings") {
+            SettingsScreen(
+                isDarkMode = isDarkTheme,
+                onThemeToggle = onThemeToggle
+            )
+        }
+
+        composable("about") {
+            AboutScreen()
         }
 
         composable("detail/selected") {

@@ -28,14 +28,17 @@ fun ApodListItem(
     isFavorite: Boolean
 ) {
     var favorited by remember { mutableStateOf(isFavorite) }
-    val context = LocalContext.current // Move here at the top!
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(6.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Box {
             Column(modifier = Modifier.padding(12.dp)) {

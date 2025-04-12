@@ -10,12 +10,12 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import androidx.work.*
-import androidx.work.WorkManager
 import com.example.astrotrack.navigation.AppNavGraph
 import com.example.astrotrack.ui.theme.AstroTrackTheme
 import com.example.astrotrack.viewmodel.ApodViewModel
@@ -25,7 +25,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
-
     private val viewModel: ApodViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         FirebaseApp.initializeApp(this)
 
-        //  Ask for POST_NOTIFICATIONS permission (Android 13+)
+        //  Ask for notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -49,14 +48,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        //  Schedule testable local notification
+        //  Schedule notification at 8:00 AM (or any time you want)
         scheduleTestReminder(hour = 8, minute = 0)
 
+        //  Theme-aware Compose UI
         setContent {
-            AstroTrackTheme {
+            var isDarkTheme by remember { mutableStateOf(false) }
+
+            AstroTrackTheme(darkTheme = isDarkTheme) {
+                val navController = rememberNavController()
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val navController = rememberNavController()
-                    AppNavGraph(navController = navController, viewModel = viewModel)
+                    AppNavGraph(
+                        navController = navController,
+                        viewModel = viewModel,
+                        isDarkTheme = isDarkTheme,
+                        onThemeToggle = { isDarkTheme = !isDarkTheme }
+                    )
                 }
             }
         }

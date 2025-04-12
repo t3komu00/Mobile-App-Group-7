@@ -24,7 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    modifier: Modifier = Modifier //  Added modifier parameter
+    modifier: Modifier = Modifier
 ) {
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
@@ -32,7 +32,7 @@ fun ProfileScreen(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
 
-    // Fetch user's name from Firestore
+    // Fetch user name
     LaunchedEffect(Unit) {
         val userId = auth.currentUser?.uid
         userId?.let {
@@ -54,7 +54,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Profile picture with initials
+        // Profile avatar with initials
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -64,7 +64,7 @@ fun ProfileScreen(
             Text(
                 text = initials,
                 fontSize = 32.sp,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -79,13 +79,13 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // ✏️ Edit Profile Button
         Button(
-            onClick = {
-                navController.navigate("editProfile")
-            },
+            onClick = { navController.navigate("editProfile") },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
@@ -95,13 +95,13 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ❤️ Favorites Button
         Button(
-            onClick = {
-                navController.navigate("favorites")
-            },
+            onClick = { navController.navigate("favorites") },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             Icon(Icons.Default.Favorite, contentDescription = "Favorites")
@@ -111,6 +111,7 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 🚪 Logout Button
         Button(
             onClick = {
                 auth.signOut()
@@ -121,7 +122,8 @@ fun ProfileScreen(
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             Icon(Icons.Default.ExitToApp, contentDescription = "Logout")

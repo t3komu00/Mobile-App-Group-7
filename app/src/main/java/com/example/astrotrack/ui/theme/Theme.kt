@@ -1,43 +1,62 @@
 package com.example.astrotrack.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
+val AstroBlue = Color(0xFF3E539C)
+val AstroBlueLight = Color(0xFFDEE5FA)
+val AstroGray = Color(0xFF2C2C2C)
+val BrightTextColor = Color.White
+val DarkBackground = Color(0xFF121212)
+val DarkSurface = Color(0xFF1C1C1C)
+
+//  Custom app-wide extra colors
+data class CustomColors(
+    val drawerBackground: Color
+)
+
+val LocalCustomColors = staticCompositionLocalOf {
+    CustomColors(
+        drawerBackground = AstroBlue // default fallback
+    )
+}
+
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = AstroGray,
+    secondary = AstroGray,
+    tertiary = AstroGray,
+    background = DarkBackground,
+    surface = DarkSurface,
+    onPrimary = BrightTextColor,
+    onSecondary = BrightTextColor,
+    onTertiary = BrightTextColor,
+    onBackground = BrightTextColor,
+    onSurface = BrightTextColor
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = AstroBlue,
+    secondary = AstroBlue,
+    tertiary = AstroBlue,
+    background = Color(0xFFF8F9FA),
+    surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    onBackground = Color.Black,
+    onSurface = Color.Black
 )
 
 @Composable
 fun AstroTrackTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -45,14 +64,21 @@ fun AstroTrackTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val customColors = if (darkTheme) {
+        CustomColors(drawerBackground = AstroGray)
+    } else {
+        CustomColors(drawerBackground = AstroBlue)
+    }
+
+    CompositionLocalProvider(LocalCustomColors provides customColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

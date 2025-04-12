@@ -35,7 +35,7 @@ fun MainScreen(viewModel: ApodViewModel, navController: NavController,modifier: 
     val errorMessage by viewModel.errorMessage.collectAsState()
     val context = LocalContext.current
 
-    // 🔍 Filter across multiple fields
+    //  Filter across multiple fields
     val filteredList = if (searchQuery.isNotBlank())
         apodList.filter {
             it.title.contains(searchQuery, true) ||
