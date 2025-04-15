@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         FirebaseApp.initializeApp(this)
 
-        //  Ask for notification permission on Android 13+
+        // Ask for notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -48,10 +48,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        //  Schedule notification at 8:00 AM (or any time you want)
-        scheduleTestReminder(hour = 8, minute = 0)
+        // Schedule daily notification at 8:00 AM
+        scheduleDailyReminder(hour = 8, minute = 0)
 
-        //  Theme-aware Compose UI
+        // Theme-aware Compose UI
         setContent {
             var isDarkTheme by remember { mutableStateOf(false) }
 
@@ -69,21 +69,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun scheduleTestReminder(hour: Int, minute: Int) {
-        val current = Calendar.getInstance()
+    // Schedule repeating daily notification using PeriodicWorkRequest
+    private fun scheduleDailyReminder(hour: Int, minute: Int) {
+        val constraints = Constraints.Builder()
+            .setRequiresBatteryNotLow(true)
+            .build()
+
+        val dailyWorkRequest = PeriodicWorkRequestBuilder<ReminderWorker>(1, TimeUnit.DAYS)
+            .setInitialDelay(calculateInitialDelay(hour, minute), TimeUnit.MILLISECONDS)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "daily_reminder", // Unique name for the worker
+            ExistingPeriodicWorkPolicy.REPLACE, // Replace if it already exists
+            dailyWorkRequest
+        )
+    }
+
+    // Helper: calculate delay until next desired trigger time
+    private fun calculateInitialDelay(hour: Int, minute: Int): Long {
+        val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
-            if (before(current)) add(Calendar.DAY_OF_MONTH, 1)
+            if (before(now)) add(Calendar.DATE, 1)
         }
-
-        val delayMillis = target.timeInMillis - current.timeInMillis
-
-        val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
-            .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
-            .build()
-
-        WorkManager.getInstance(this).enqueue(workRequest)
+        return target.timeInMillis - now.timeInMillis
     }
 }
