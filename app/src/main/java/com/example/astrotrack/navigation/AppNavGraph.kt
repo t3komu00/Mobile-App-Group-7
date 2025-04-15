@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.advan.presentation.EditProfileScreen
 import com.example.astrotrack.ui.*
 import com.example.astrotrack.ui.components.AppScaffold
 import com.example.astrotrack.viewmodel.ApodViewModel

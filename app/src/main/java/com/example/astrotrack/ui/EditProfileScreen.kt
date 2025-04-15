@@ -1,4 +1,4 @@
-package com.example.astrotrack.ui
+package com.example.advan.presentation
 
 import android.net.Uri
 import android.util.Log
@@ -33,38 +33,41 @@ fun EditProfileScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
-    val userId = auth.currentUser?.uid
+    val user = auth.currentUser
+    val userId = user?.uid
 
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(user?.email ?: "") }
     var gender by remember { mutableStateOf("") }
-    var profilePicUrl by remember { mutableStateOf<String?>(null) }
+    var profilePicUrl by remember { mutableStateOf<String?>(user?.photoUrl?.toString()) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            uploadProfilePicture(userId, it, context) { downloadUrl ->
+            uploadProfilePicture(userId, it) { downloadUrl ->
                 profilePicUrl = downloadUrl
             }
         }
     }
 
-    // Fetch existing user data
+    // Load Firestore info if exists
     LaunchedEffect(userId) {
         userId?.let {
-            firestore.collection("users").document(it)
-                .get()
-                .addOnSuccessListener { doc ->
-                    if (doc.exists()) {
-                        firstName = doc.getString("firstName") ?: ""
-                        lastName = doc.getString("lastName") ?: ""
-                        phoneNumber = doc.getString("phoneNumber") ?: ""
-                        email = doc.getString("email") ?: ""
-                        gender = doc.getString("gender") ?: ""
-                        profilePicUrl = doc.getString("profilePicUrl")
-                    }
+            firestore.collection("users").document(it).get().addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    firstName = doc.getString("firstName") ?: ""
+                    lastName = doc.getString("lastName") ?: ""
+                    phoneNumber = doc.getString("phoneNumber") ?: ""
+                    gender = doc.getString("gender") ?: ""
+                    profilePicUrl = doc.getString("profilePicUrl") ?: profilePicUrl
+                } else {
+                    // Fallback to FirebaseAuth data
+                    val nameParts = user?.displayName?.split(" ") ?: listOf()
+                    firstName = nameParts.getOrNull(0) ?: ""
+                    lastName = nameParts.getOrNull(1) ?: ""
                 }
+            }
         }
     }
 
@@ -77,18 +80,15 @@ fun EditProfileScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text("Edit Profile", fontSize = 28.sp, color = MaterialTheme.colorScheme.onBackground)
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Profile Image with Initials or Photo
+        // 👤 Profile Picture
         Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.size(120.dp)) {
             if (!profilePicUrl.isNullOrEmpty()) {
                 Image(
                     painter = rememberAsyncImagePainter(profilePicUrl),
                     contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape),
+                    modifier = Modifier.size(120.dp).clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
             } else {
@@ -99,12 +99,7 @@ fun EditProfileScreen(navController: NavController) {
                         .size(120.dp)
                         .background(MaterialTheme.colorScheme.primary, CircleShape)
                 ) {
-                    Text(
-                        text = initials,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 28.sp,
-                        textAlign = TextAlign.Center
-                    )
+                    Text(text = initials, color = MaterialTheme.colorScheme.onPrimary, fontSize = 28.sp)
                 }
             }
 
@@ -114,11 +109,7 @@ fun EditProfileScreen(navController: NavController) {
                     .size(36.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.CameraAlt,
-                    contentDescription = "Upload Image",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
+                Icon(Icons.Default.CameraAlt, contentDescription = "Upload", tint = MaterialTheme.colorScheme.onPrimary)
             }
         }
 
@@ -133,29 +124,26 @@ fun EditProfileScreen(navController: NavController) {
         OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(value = gender, onValueChange = { gender = it }, label = { Text("Gender") }, modifier = Modifier.fillMaxWidth())
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             userId?.let {
-                firestore.collection("users").document(it)
-                    .update(
-                        mapOf(
-                            "firstName" to firstName,
-                            "lastName" to lastName,
-                            "phoneNumber" to phoneNumber,
-                            "email" to email,
-                            "gender" to gender,
-                            "profilePicUrl" to profilePicUrl
-                        )
-                    )
+                val userMap = mapOf(
+                    "firstName" to firstName,
+                    "lastName" to lastName,
+                    "phoneNumber" to phoneNumber,
+                    "email" to email,
+                    "gender" to gender,
+                    "profilePicUrl" to profilePicUrl
+                )
+                firestore.collection("users").document(it).set(userMap)
                     .addOnSuccessListener {
                         Toast.makeText(context, "Profile updated!", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
                     }
                     .addOnFailureListener {
-                        Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT).show()
-                        Log.e("EditProfile", "Update error", it)
+                        Toast.makeText(context, "Failed to update", Toast.LENGTH_SHORT).show()
+                        Log.e("EditProfile", "Update Error", it)
                     }
             }
         }) {
@@ -164,12 +152,7 @@ fun EditProfileScreen(navController: NavController) {
     }
 }
 
-fun uploadProfilePicture(
-    userId: String?,
-    imageUri: Uri,
-    context: android.content.Context,
-    onSuccess: (String) -> Unit
-) {
+fun uploadProfilePicture(userId: String?, imageUri: Uri, onSuccess: (String) -> Unit) {
     userId?.let { uid ->
         val storageRef = FirebaseStorage.getInstance().reference.child("profile_pictures/$uid.jpg")
         storageRef.putFile(imageUri)
@@ -179,18 +162,9 @@ fun uploadProfilePicture(
                     FirebaseFirestore.getInstance().collection("users").document(uid)
                         .update("profilePicUrl", downloadUrl)
                         .addOnSuccessListener {
-                            Toast.makeText(context, "Picture updated", Toast.LENGTH_SHORT).show()
                             onSuccess(downloadUrl)
                         }
-                        .addOnFailureListener {
-                            Toast.makeText(context, "Failed to update picture URL", Toast.LENGTH_SHORT).show()
-                            Log.e("UploadProfile", "Firestore update failed", it)
-                        }
                 }
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
-                Log.e("UploadProfile", "Upload error", it)
             }
     }
 }

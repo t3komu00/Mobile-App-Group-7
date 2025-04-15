@@ -12,7 +12,20 @@
           "package_name": "com.example.astrotrack"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "163607543046-crl88i21ofajnqp2j1a38kpb2kfc3gt2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.astrotrack",
+            "certificate_hash": "dcb898969962f663724bfee16b99118290b8d1ac"
+          }
+        },
+        {
+          "client_id": "163607543046-jvnb63fk1gvolapbmbfbjchfvdvom3ul.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCe6YzKXkCYxQWcz1LnXTh912-GVYeDyAI"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163607543046-hvi7975m4ilqifbfbnjemmlp51f1hnqj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
