@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
         // Theme-aware Compose UI
         setContent {
-            var isDarkTheme by remember { mutableStateOf(false) }
+            var isDarkTheme by remember { mutableStateOf(true) }
 
             AstroTrackTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
