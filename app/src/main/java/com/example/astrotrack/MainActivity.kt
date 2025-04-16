@@ -16,11 +16,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import androidx.work.*
+import com.example.astrotrack.datastore.NotificationPreferences
 import com.example.astrotrack.navigation.AppNavGraph
 import com.example.astrotrack.ui.theme.AstroTrackTheme
 import com.example.astrotrack.viewmodel.ApodViewModel
 import com.example.astrotrack.worker.ReminderWorker
 import com.google.firebase.FirebaseApp
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -33,7 +36,6 @@ class MainActivity : ComponentActivity() {
 
         FirebaseApp.initializeApp(this)
 
-        // Ask for notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -48,10 +50,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Schedule daily notification at 8:00 AM
-        scheduleDailyReminder(hour = 8, minute = 0)
+        val notificationPrefs = NotificationPreferences(this)
+        val notificationsEnabled = runBlocking { notificationPrefs.notificationsEnabledFlow.first() }
 
-        // Theme-aware Compose UI
+        if (notificationsEnabled) {
+            scheduleDailyReminder(hour = 8, minute = 0)
+        } else {
+            WorkManager.getInstance(this).cancelUniqueWork("daily_reminder")
+        }
+
         setContent {
             var isDarkTheme by remember { mutableStateOf(true) }
 
@@ -69,8 +76,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Schedule repeating daily notification using PeriodicWorkRequest
-    private fun scheduleDailyReminder(hour: Int, minute: Int) {
+    fun scheduleDailyReminder(hour: Int, minute: Int) {
         val constraints = Constraints.Builder()
             .setRequiresBatteryNotLow(true)
             .build()
@@ -81,13 +87,12 @@ class MainActivity : ComponentActivity() {
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "daily_reminder", // Unique name for the worker
-            ExistingPeriodicWorkPolicy.REPLACE, // Replace if it already exists
+            "daily_reminder",
+            ExistingPeriodicWorkPolicy.REPLACE,
             dailyWorkRequest
         )
     }
 
-    // Helper: calculate delay until next desired trigger time
     private fun calculateInitialDelay(hour: Int, minute: Int): Long {
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {

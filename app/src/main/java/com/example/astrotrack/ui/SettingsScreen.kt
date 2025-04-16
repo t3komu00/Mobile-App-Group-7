@@ -15,8 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.WorkManager
+import com.example.astrotrack.MainActivity
+import com.example.astrotrack.datastore.NotificationPreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -24,8 +29,11 @@ fun SettingsScreen(
     onThemeToggle: () -> Unit
 ) {
     val context = LocalContext.current
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var showDeleteDialog by remember { mutableStateOf(false) } // ⬅️ dialog state
+    val scope = rememberCoroutineScope()
+    val notificationPrefs = remember { NotificationPreferences(context) }
+    val notificationsEnabled by notificationPrefs.notificationsEnabledFlow.collectAsState(initial = true)
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold { paddingValues ->
         Column(
@@ -37,7 +45,6 @@ fun SettingsScreen(
         ) {
             Text("Settings", style = MaterialTheme.typography.headlineMedium)
 
-            // Dark mode toggle
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -47,17 +54,10 @@ fun SettingsScreen(
                 Text("Dark Mode", modifier = Modifier.weight(1f))
                 Switch(
                     checked = isDarkMode,
-                    onCheckedChange = { onThemeToggle() },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        uncheckedThumbColor = Color(0xFFCCCCCC),
-                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                        uncheckedTrackColor = Color.LightGray.copy(alpha = 0.3f)
-                    )
+                    onCheckedChange = { onThemeToggle() }
                 )
             }
 
-            // Notification toggle
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -68,23 +68,20 @@ fun SettingsScreen(
                 Switch(
                     checked = notificationsEnabled,
                     onCheckedChange = {
-                        notificationsEnabled = it
-                        Toast.makeText(
-                            context,
-                            if (it) "Notifications enabled" else "Notifications disabled",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        uncheckedThumbColor = Color(0xFFCCCCCC),
-                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                        uncheckedTrackColor = Color.LightGray.copy(alpha = 0.3f)
-                    )
+                        scope.launch {
+                            notificationPrefs.setNotificationsEnabled(it)
+                            if (it) {
+                                Toast.makeText(context, "Notifications enabled", Toast.LENGTH_SHORT).show()
+                                (context as? MainActivity)?.scheduleDailyReminder(8, 0)
+                            } else {
+                                Toast.makeText(context, "Notifications disabled", Toast.LENGTH_SHORT).show()
+                                WorkManager.getInstance(context).cancelUniqueWork("daily_reminder")
+                            }
+                        }
+                    }
                 )
             }
 
-            // Delete account with confirmation
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -104,7 +101,6 @@ fun SettingsScreen(
                 }
             }
 
-            // Show AlertDialog when requested
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
