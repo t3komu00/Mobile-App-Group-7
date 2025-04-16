@@ -4,7 +4,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -14,21 +16,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.astrotrack.R
 import com.example.astrotrack.viewmodel.ApodViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.res.painterResource
-import com.example.astrotrack.R
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
@@ -39,6 +40,7 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
     ) {
         val context = LocalContext.current
         val auth = FirebaseAuth.getInstance()
+        val firestore = FirebaseFirestore.getInstance()
 
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
@@ -47,13 +49,11 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
         var showResetDialog by remember { mutableStateOf(false) }
         var resetEmail by remember { mutableStateOf("") }
 
-        // Google Sign-In setup
         val gso = remember {
             GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("163607543046-hvi7975m4ilqifbfbnjemmlp51f1hnqj.apps.googleusercontent.com") // 🔑 Replace with your real Web client ID
+                .requestIdToken("163607543046-hvi7975m4ilqifbfbnjemmlp51f1hnqj.apps.googleusercontent.com")
                 .requestEmail()
                 .build()
-
         }
         val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
 
@@ -67,13 +67,38 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 auth.signInWithCredential(credential)
                     .addOnCompleteListener { authResult ->
                         if (authResult.isSuccessful) {
+                            val firebaseUser = auth.currentUser
+                            val uid = firebaseUser?.uid
+                            val displayName = firebaseUser?.displayName ?: ""
+                            val nameParts = displayName.split(" ")
+                            val firstName = nameParts.getOrNull(0) ?: ""
+                            val lastName = nameParts.getOrNull(1) ?: ""
+                            val profilePicUrl = firebaseUser?.photoUrl?.toString() ?: ""
+
+                            val userMap = mapOf(
+                                "firstName" to firstName,
+                                "lastName" to lastName,
+                                "email" to firebaseUser?.email,
+                                "profilePicUrl" to profilePicUrl
+                            )
+
+                            uid?.let {
+                                firestore.collection("users").document(it)
+                                    .set(userMap)
+                                    .addOnSuccessListener {
+                                        Log.d("LoginScreen", "Google user data saved.")
+                                    }
+                                    .addOnFailureListener {
+                                        Log.e("LoginScreen", "Failed to save Google user data.", it)
+                                    }
+                            }
+
                             viewModel.refreshFavorites()
                             navController.navigate("main") {
                                 popUpTo("login") { inclusive = true }
                             }
                         } else {
-                            Toast.makeText(context, "Google sign-in failed", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "Google sign-in failed", Toast.LENGTH_SHORT).show()
                         }
                     }
             } catch (e: ApiException) {
@@ -124,7 +149,7 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 )
 
                 TextButton(onClick = { showResetDialog = true }) {
-                    Text("Forgot Password?", color = MaterialTheme.colorScheme.primary)
+                    Text("Forgot Password?", color = MaterialTheme.colorScheme.onBackground)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -139,8 +164,7 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 } else {
-                                    Toast.makeText(context, "Login failed!", Toast.LENGTH_SHORT)
-                                        .show()
+                                    Toast.makeText(context, "Login failed!", Toast.LENGTH_SHORT).show()
                                 }
                             }
                     },
@@ -148,11 +172,13 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 ) {
                     Text("Login")
                 }
-                // "or" separator
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = "or login with",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -175,7 +201,7 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 }) {
                     Text(
                         "Don't have an account? Sign Up",
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }

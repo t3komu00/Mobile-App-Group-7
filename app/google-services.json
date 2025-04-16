@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "163607543046-jldo6414fmpucqq8svhb4k3t3d7t9auf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.astrotrack",
+            "certificate_hash": "cf938a18804d1448e247940a677cf5471df6afe1"
+          }
+        },
+        {
           "client_id": "163607543046-jvnb63fk1gvolapbmbfbjchfvdvom3ul.apps.googleusercontent.com",
           "client_type": 3
         }

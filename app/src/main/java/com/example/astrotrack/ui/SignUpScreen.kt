@@ -140,7 +140,7 @@ fun SignUpScreen(navController: NavController) {
             TextButton(onClick = {
                 navController.navigate("login")
             }) {
-                Text("Already have an account? Login", color = MaterialTheme.colorScheme.primary)
+                Text("Already have an account? Login", color = MaterialTheme.colorScheme.onBackground)
             }
         }
     }
