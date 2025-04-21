@@ -42,7 +42,7 @@ fun SplashScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            val logo: Painter = painterResource(id = R.drawable.logo) // 🔁 Replace with your logo
+            val logo: Painter = painterResource(id = R.drawable.logo_new) // 🔁 Replace with your logo
             Image(
                 painter = logo,
                 contentDescription = "App Logo",
@@ -52,6 +52,12 @@ fun SplashScreen(navController: NavController) {
             Text(
                 text = "Welcome to AstroTrack",
                 fontSize = 22.sp,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = " Explore the Universe, One Star at a Time",
+                fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onPrimary
             )
         }
