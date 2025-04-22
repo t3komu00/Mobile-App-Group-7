@@ -26,9 +26,14 @@ fun SignUpScreen(navController: NavController) {
         contentColor = MaterialTheme.colorScheme.onBackground,
         modifier = Modifier.fillMaxSize()
     ) {
+        // Local context for showing Toasts
         val context = LocalContext.current
+
+        // Firebase Authentication and Firestore instances
         val auth = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()
+
+        // Input state variables
 
         var firstName by remember { mutableStateOf("") }
         var lastName by remember { mutableStateOf("") }
@@ -94,19 +99,27 @@ fun SignUpScreen(navController: NavController) {
 
             Button(
                 onClick = {
+
+                    // Attempt to create user with Firebase Auth
                     auth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
+                                // Get newly created user's ID
                                 val userId = auth.currentUser?.uid
+
+                                // Map user data to store in Firestore
                                 val userMap = mapOf(
                                     "firstName" to firstName,
                                     "lastName" to lastName,
                                     "email" to email
                                 )
+
+                                // Save user data to Firestore under "users/{uid}"
                                 userId?.let {
                                     firestore.collection("users").document(it)
                                         .set(userMap)
                                         .addOnSuccessListener {
+                                            // On success, navigate to main screen
                                             Toast.makeText(
                                                 context,
                                                 "Account created!",
@@ -117,6 +130,7 @@ fun SignUpScreen(navController: NavController) {
                                             }
                                         }
                                         .addOnFailureListener {
+                                            // Show failure message if Firestore save fails
                                             Toast.makeText(
                                                 context,
                                                 "Failed to save user data",
@@ -125,6 +139,7 @@ fun SignUpScreen(navController: NavController) {
                                         }
                                 }
                             } else {
+                                // Show error if sign-up fails
                                 Toast.makeText(context, "Sign Up failed!", Toast.LENGTH_SHORT)
                                     .show()
                             }
@@ -136,6 +151,8 @@ fun SignUpScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Navigate to Login screen if user already has an account
 
             TextButton(onClick = {
                 navController.navigate("login")

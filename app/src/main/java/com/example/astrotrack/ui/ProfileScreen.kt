@@ -33,6 +33,8 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    // Firebase Authentication instance and current user
     val auth = FirebaseAuth.getInstance()
     val user = auth.currentUser
 
