@@ -24,7 +24,7 @@ fun AboutScreen() {
         )
 
         Text(
-            text = "Built by:  Group 07\nVersion: 1.0.0\nOpen source: github.com/our-repo-url",
+            text = "Built by:  Group 07\nVersion: 1.0.0\nOpen source: https://github.com/t3komu00/Mobile-App-Group-7",
             fontSize = 14.sp
         )
     }
