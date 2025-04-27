@@ -16,10 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -41,7 +39,7 @@ fun EditProfileScreen(navController: NavController) {
     var phoneNumber by remember { mutableStateOf("") }
     var email by remember { mutableStateOf(user?.email ?: "") }
     var gender by remember { mutableStateOf("") }
-    var profilePicUrl by remember { mutableStateOf<String?>(user?.photoUrl?.toString()) }
+    var profilePicUrl by remember { mutableStateOf<String?>(null) } // Fix: Start with null, not old user.photoUrl
 
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -60,7 +58,7 @@ fun EditProfileScreen(navController: NavController) {
                     lastName = doc.getString("lastName") ?: ""
                     phoneNumber = doc.getString("phoneNumber") ?: ""
                     gender = doc.getString("gender") ?: ""
-                    profilePicUrl = doc.getString("profilePicUrl") ?: profilePicUrl
+                    profilePicUrl = doc.getString("profilePicUrl")
                 } else {
                     // Fallback to FirebaseAuth data
                     val nameParts = user?.displayName?.split(" ") ?: listOf()
@@ -82,13 +80,15 @@ fun EditProfileScreen(navController: NavController) {
         Text("Edit Profile", fontSize = 28.sp, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 👤 Profile Picture
+        //  Profile Picture Section
         Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.size(120.dp)) {
             if (!profilePicUrl.isNullOrEmpty()) {
                 Image(
                     painter = rememberAsyncImagePainter(profilePicUrl),
                     contentDescription = "Profile Picture",
-                    modifier = Modifier.size(120.dp).clip(CircleShape),
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
             } else {
