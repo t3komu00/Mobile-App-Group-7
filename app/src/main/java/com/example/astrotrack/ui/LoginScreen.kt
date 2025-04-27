@@ -33,7 +33,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
-    // Main surface background and text color setup
     Surface(
         color = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground,
@@ -43,18 +42,11 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
         val auth = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()
 
-        // States to hold user input for email, password, and password visibility
-
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
-
-        // States to manage password reset dialog visibility and input
-
         var showResetDialog by remember { mutableStateOf(false) }
         var resetEmail by remember { mutableStateOf("") }
-
-        // Google Sign-In configuration
 
         val gso = remember {
             GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -62,11 +54,7 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 .requestEmail()
                 .build()
         }
-
-        // Google sign-in client
         val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
-
-        // Launcher for Google sign-in result
 
         val launcher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
@@ -78,42 +66,45 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 auth.signInWithCredential(credential)
                     .addOnCompleteListener { authResult ->
                         if (authResult.isSuccessful) {
-                            // Extract user data after successful sign-in
                             val firebaseUser = auth.currentUser
                             val uid = firebaseUser?.uid
-                            val displayName = firebaseUser?.displayName ?: ""
-                            val nameParts = displayName.split(" ")
-                            val firstName = nameParts.getOrNull(0) ?: ""
-                            val lastName = nameParts.getOrNull(1) ?: ""
-                            val profilePicUrl = firebaseUser?.photoUrl?.toString() ?: ""
-
-                            // Prepare user data to store in Firestore
-
-                            val userMap = mapOf(
-                                "firstName" to firstName,
-                                "lastName" to lastName,
-                                "email" to firebaseUser?.email,
-                                "profilePicUrl" to profilePicUrl
-                            )
-
-                            // Save user data to Firestore
 
                             uid?.let {
-                                firestore.collection("users").document(it)
-                                    .set(userMap)
-                                    .addOnSuccessListener {
-                                        Log.d("LoginScreen", "Google user data saved.")
-                                    }
-                                    .addOnFailureListener {
-                                        Log.e("LoginScreen", "Failed to save Google user data.", it)
-                                    }
-                            }
+                                val userRef = firestore.collection("users").document(it)
 
-                            // Refresh ViewModel and navigate to main screen
+                                userRef.get().addOnSuccessListener { documentSnapshot ->
+                                    val userExists = documentSnapshot.exists()
 
-                            viewModel.refreshFavorites()
-                            navController.navigate("main") {
-                                popUpTo("login") { inclusive = true }
+                                    val displayName = firebaseUser?.displayName ?: ""
+                                    val nameParts = displayName.split(" ")
+                                    val firstName = nameParts.getOrNull(0) ?: ""
+                                    val lastName = nameParts.getOrNull(1) ?: ""
+                                    val email = firebaseUser?.email
+                                    val googlePhotoUrl = firebaseUser?.photoUrl?.toString() ?: ""
+
+                                    // ⚡ If Firestore user already has profilePicUrl, keep it. Otherwise use Google's photo.
+                                    val existingPhotoUrl = documentSnapshot.getString("profilePicUrl") ?: googlePhotoUrl
+
+                                    val userMap = mapOf(
+                                        "firstName" to firstName,
+                                        "lastName" to lastName,
+                                        "email" to email,
+                                        "profilePicUrl" to existingPhotoUrl
+                                    )
+
+                                    userRef.set(userMap)
+                                        .addOnSuccessListener {
+                                            Log.d("LoginScreen", "Google user data saved or updated.")
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e("LoginScreen", "Failed to save Google user data.", e)
+                                        }
+
+                                    viewModel.refreshFavorites()
+                                    navController.navigate("main") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
                             }
                         } else {
                             Toast.makeText(context, "Google sign-in failed", Toast.LENGTH_SHORT).show()
@@ -124,8 +115,6 @@ fun LoginScreen(navController: NavController, viewModel: ApodViewModel) {
                 Log.e("LoginScreen", "Google Sign-In failed", e)
             }
         }
-
-        // Main layout container
 
         Box(
             modifier = Modifier

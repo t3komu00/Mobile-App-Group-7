@@ -33,28 +33,27 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-
-    // Firebase Authentication instance and current user
     val auth = FirebaseAuth.getInstance()
     val user = auth.currentUser
 
+    val firestore = FirebaseFirestore.getInstance()
+
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
-    val displayName = user?.displayName
-    val photoUrl = user?.photoUrl
+    var profilePicUrl by remember { mutableStateOf<String?>(null) }
 
-    // Fetch user name from Firestore if displayName is null
-    LaunchedEffect(Unit) {
-        val userId = user?.uid
-        if (displayName == null) {
-            userId?.let {
-                FirebaseFirestore.getInstance().collection("users").document(it)
-                    .get()
-                    .addOnSuccessListener { document ->
-                        firstName = document.getString("firstName") ?: ""
-                        lastName = document.getString("lastName") ?: ""
-                    }
-            }
+    val userId = user?.uid
+
+    // Fetch user details from Firestore
+    LaunchedEffect(userId) {
+        userId?.let { uid ->
+            firestore.collection("users").document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    firstName = document.getString("firstName") ?: ""
+                    lastName = document.getString("lastName") ?: ""
+                    profilePicUrl = document.getString("profilePicUrl")
+                }
         }
     }
 
@@ -68,10 +67,10 @@ fun ProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Profile avatar
-        if (photoUrl != null) {
+        if (!profilePicUrl.isNullOrEmpty()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(photoUrl)
+                    .data(profilePicUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = "Profile Picture",
@@ -98,7 +97,7 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = displayName ?: "$firstName $lastName",
+            text = if (firstName.isNotEmpty() || lastName.isNotEmpty()) "$firstName $lastName" else user?.displayName.orEmpty(),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
@@ -165,10 +164,8 @@ fun signOut(context: Context, navController: NavHostController) {
 
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
 
-    // Sign out from Firebase
     auth.signOut()
 
-    // Sign out from Google
     googleSignInClient.signOut().addOnCompleteListener {
         Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
         navController.navigate("login") {
@@ -176,6 +173,3 @@ fun signOut(context: Context, navController: NavHostController) {
         }
     }
 }
-
-
-
